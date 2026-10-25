@@ -465,7 +465,7 @@ function reportHTML(express){
   if(!list.length)h+=`<p class="empty">Rien pour l’instant. Prenez des photos (zone « Photos rapides » pour aller vite) puis lancez l’analyse.</p>`;
   for(const z of ZONES){const zl=list.filter(x=>x.zone===z.id);if(!zl.length)continue;h+=`<span class="eyebrow" style="margin-top:6px">${esc(z.title)}</span>`+zl.map(findingHTML).join('')}
   h+=`</div></section>`;
-  h+=`<section class="panel"><h3>Synthèse pour le client</h3><textarea id="synth" rows="6" placeholder="Résumé en langage clair pour le client.">${esc(S.synth)}</textarea><div class="toolbar" style="margin-top:10px"><button type="button" class="small" id="btnSynth" ${aiReady&&kept.length?'':'disabled'}>Rédiger avec l’IA</button><span class="status" id="synthSt"></span></div></section>`;
+  h+=`<section class="panel"><h3>Synthèse pour le client</h3><textarea id="synth" rows="6" placeholder="Résumé en langage clair pour le client.">${esc(S.synth)}</textarea><div class="toolbar" style="margin-top:10px"><button type="button" class="small primary" id="btnAutoSynth">Générer la synthèse</button>${aiReady?`<button type="button" class="small" id="btnSynth" ${kept.length?'':'disabled'}>Rédiger avec l’IA</button>`:''}<span class="status" id="synthSt"></span></div></section>`;
   h+=`<section class="panel"><h3>Export</h3><div class="toolbar"><button type="button" class="primary" id="btnExport">Télécharger le rapport${anyPh?' avec photos':''}</button><button type="button" id="btnCopy">Copier le texte</button></div><p class="status" style="margin-top:8px">Fichier HTML : s’ouvre dans un navigateur et s’imprime en PDF.</p><textarea id="copyArea" rows="4" hidden></textarea></section>`;
   return h;
 }
@@ -547,6 +547,27 @@ Réponds UNIQUEMENT avec ce JSON :
 }
 let allRunning=false;
 async function analyzeAll(){if(allRunning)return;allRunning=true;try{for(const z of pendingZones()){toast('Analyse : '+z.title);await analyze(z.id);if(!aiReady)break}}finally{allRunning=false}S.active='rapport';save();render();window.scrollTo({top:0})}
+/* Synthèse automatique sans IA, à partir des constats retenus */
+function autoSynth(){
+  const f=eff();const kept=allFindings().filter(x=>!S.off.includes(x.key));const c=counts(kept);
+  const app=LABELS.appareil[f.appareil]?LABELS.appareil[f.appareil].toLowerCase():'l’appareil de chauffage';
+  const cond=LABELS.conduit[f.conduit]?' raccordé à un conduit '+LABELS.conduit[f.conduit].toLowerCase():'';
+  const low=t=>(/^[A-ZÉ]{2}/.test(t)?t.charAt(0):t.charAt(0).toLowerCase())+t.slice(1).replace(/\.$/,'');
+  const L=[];
+  L.push(`Nous avons contrôlé l’installation : ${app}${cond}${S.f.adresse?', '+S.f.adresse:''}${S.f.date?', le '+S.f.date.split('-').reverse().join('/'):''}.`);
+  if(!kept.length)L.push('Aucune non-conformité n’a été relevée lors de ce contrôle visuel. L’installation peut être utilisée normalement, sous réserve d’un ramonage au moins une fois par an.');
+  else{
+    if(c.d)L.push(`Avis : installation dangereuse. ${c.d} point${c.d>1?'s présentent':' présente'} un risque immédiat d’incendie ou d’intoxication au monoxyde de carbone. Nous recommandons de ne plus utiliser l’appareil jusqu’à la remise en état.`);
+    else if(c.n)L.push(`Avis : installation utilisable avec prudence, mais non conforme. ${c.n} point${c.n>1?'s sont à corriger':' est à corriger'} pour respecter la réglementation (NF DTU 24.1 / 24.2, arrêté du 22/10/1969, arrêté du 23/02/2009).`);
+    else L.push('Avis : aucune non-conformité certaine, mais quelques points restent à vérifier.');
+    const d=kept.filter(x=>x.g==='danger'),nc=kept.filter(x=>x.g==='non_conforme'),av=kept.filter(x=>x.g==='a_verifier');
+    if(d.length)L.push('À traiter en priorité : '+d.map(x=>low(x.constat)).join(' ; ')+'.');
+    if(nc.length)L.push('Travaux de mise en conformité à prévoir : '+nc.map(x=>low(x.constat)).join(' ; ')+'.');
+    if(av.length)L.push('À vérifier lors d’une prochaine intervention : '+av.map(x=>low(x.constat)).join(' ; ')+'.');
+    L.push('Le détail de chaque point et la correction conseillée figurent ci-dessous. Nous restons à votre disposition pour établir un devis.');
+  }
+  S.synth=L.join('\n\n');save();const t=document.getElementById('synth');if(t)t.value=S.synth;toast('Synthèse générée : vous pouvez la modifier');
+}
 async function synth(){
   const kept=allFindings().filter(x=>!S.off.includes(x.key));const st=document.getElementById('synthSt');st.textContent='Rédaction…';document.getElementById('btnSynth').disabled=true;
   try{const{text}=await sampleFn(`Tu es ramoneur-fumiste. Rédige une synthèse de 5 à 8 lignes, en français clair pour un particulier, de ce diagnostic. Commence par l'avis général (utilisable / à corriger / arrêt conseillé), puis les travaux prioritaires. Pas de titre, pas de puces, pas de formule de politesse.
@@ -599,6 +620,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.stop){busy[t.dataset.stop]?.ctl.abort();return}
   if(t.dataset.all||t.id==='btnAll'){analyzeAll();return}
   if(t.id==='btnSynth'){synth();return}
+  if(t.id==='btnAutoSynth'){autoSynth();return}
   if(t.id==='btnExport'){exportReport();return}
   if(t.id==='btnCopy'){copyReport();return}
   if(t.id==='btnNew'){document.getElementById('confirmBar').hidden=false;return}
