@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d6b3e">
+<title>Diagnostic Fumisterie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+html{color-scheme:light}body{margin:0;font-size:14px;font-family:system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* Layout: sticky header with one main action + zone rail (chips on phone, sidebar on desktop) + one simple panel per zone: photos first, details folded */
+:root{
+  --bg:#eef0ee; --surface:#ffffff; --sunk:#e3e7e4; --ink:#18201c; --muted:#5b665f; --line:#cfd6d1;
+  --accent:#0d6b3e; --accent-ink:#ffffff; --brand:#c4122f;
+  --danger:#b3261e; --danger-bg:#fbe9e7; --nc:#a45a08; --nc-bg:#fdf0dc; --check:#2d5e88; --check-bg:#e3eef8; --ok:#1d7a46; --ok-bg:#e1f3e8;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif; --f-body:"IBM Plex Sans",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111513; --surface:#1a1f1c; --sunk:#232a26; --ink:#e6ebe8; --muted:#9aa69f; --line:#333c37;
+  --accent:#3fb87a; --accent-ink:#06150d; --brand:#ef4a5f;
+  --danger:#ff8a80; --danger-bg:#3a1714; --nc:#f3a65a; --nc-bg:#3a2810; --check:#8dbbe6; --check-bg:#172a3b; --ok:#6fd39b; --ok-bg:#12301f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111513; --surface:#1a1f1c; --sunk:#232a26; --ink:#e6ebe8; --muted:#9aa69f; --line:#333c37;
+  --accent:#3fb87a; --accent-ink:#06150d; --brand:#ef4a5f;
+  --danger:#ff8a80; --danger-bg:#3a1714; --nc:#f3a65a; --nc-bg:#3a2810; --check:#8dbbe6; --check-bg:#172a3b; --ok:#6fd39b; --ok-bg:#12301f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{display:flex;align-items:center;gap:12px;padding-block:10px;max-width:1180px;margin:0 auto}
+@media(max-width:640px){.top-in{flex-wrap:wrap}.brand p{display:none}.top-actions{width:100%;justify-content:flex-start}}
+.logo{width:34px;height:34px;flex:none}
+.brand h1{font-family:var(--f-display);font-size:22px;letter-spacing:.02em;margin:0;line-height:1.05;text-transform:uppercase}
+.brand p{margin:0;font-size:12px;color:var(--muted)}
+.brand{min-width:0;flex:1}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.stripe{height:3px;background:linear-gradient(90deg,var(--brand) 0 50%,var(--accent) 50% 100%)}
+button,.btn{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 12px;font-weight:500;display:inline-flex;align-items:center;gap:6px;min-height:40px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary,.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.ghost{background:transparent}
+button.small,.btn.small{min-height:34px;padding:4px 12px;font-size:13px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.shell{max-width:1180px;margin:0 auto;display:grid;gap:20px;padding-block:16px 60px}
+@media(min-width:900px){.shell{grid-template-columns:240px minmax(0,1fr)}}
+nav.rail{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+@media(min-width:900px){nav.rail{flex-direction:column;overflow:visible;position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);align-self:start}}
+.chip{flex:none;display:flex;align-items:center;gap:8px;text-align:left;border-radius:10px;padding:8px 10px;min-height:44px;background:var(--surface);border:1px solid var(--line)}
+.chip .n{font-family:var(--f-mono);font-size:12px;color:var(--muted);width:20px}
+.chip .t{font-weight:500;white-space:nowrap}
+.chip .meta{margin-left:auto;display:flex;gap:4px;padding-left:6px}
+.chip[aria-current="true"]{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.chip.na{opacity:.5}
+.dot{font-family:var(--f-mono);font-size:11px;border-radius:99px;padding:1px 7px;line-height:18px}
+.dot.d{background:var(--danger-bg);color:var(--danger)} .dot.n{background:var(--nc-bg);color:var(--nc)} .dot.p{background:var(--sunk);color:var(--muted)}
+main{min-width:0;display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.zone-head h2{font-family:var(--f-display);font-size:30px;line-height:1;margin:2px 0 4px;text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
+.zone-head p{margin:0;color:var(--muted);max-width:62ch}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h3{font-family:var(--f-display);font-size:18px;text-transform:uppercase;letter-spacing:.04em;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+h3 .count{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:0;text-transform:none}
+.shots{display:grid;gap:8px}
+@media(min-width:700px){.shots{grid-template-columns:1fr 1fr}}
+.shot{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px dashed var(--line);border-radius:10px;min-width:0}
+.shot.has{border-style:solid;background:var(--sunk)}
+.shot .lbl{flex:1;min-width:0;font-size:14px}
+.shot .lbl small{display:block;color:var(--muted);font-size:12px}
+.shot .ok{font-family:var(--f-mono);font-size:11px;color:var(--ok)}
+.cam{position:relative;overflow:hidden;flex:none}
+.cam input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:12px}
+.ph{position:relative;border-radius:8px;overflow:hidden;background:var(--sunk);aspect-ratio:1;max-width:100%}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph span{position:absolute;left:0;right:0;bottom:0;font-size:11px;padding:3px 6px;background:rgba(0,0,0,.6);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph button{position:absolute;top:4px;right:4px;min-height:26px;padding:0 8px;font-size:12px;background:rgba(0,0,0,.6);color:#fff;border:0}
+details.fold{border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+details.fold>summary{cursor:pointer;list-style:none;padding:14px 18px;display:flex;align-items:center;gap:10px;font-weight:500}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::before{content:"+";font-family:var(--f-mono);width:16px;color:var(--accent)}
+details.fold[open]>summary::before{content:"–"}
+details.fold>summary small{color:var(--muted);font-weight:400;margin-left:auto;font-size:12px;text-align:right}
+details.fold>.in{padding:0 18px 18px}
+ul.tips{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+ul.tips li::marker{color:var(--accent)}
+.fields{display:flex;flex-direction:column;gap:12px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label,.f .q{font-size:14px;font-weight:500}
+.f small,.q small{color:var(--muted);font-size:12px;font-weight:400}
+.row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.row .q{flex:1;min-width:180px}
+.ded{font-family:var(--f-mono);font-size:11px;color:var(--check);background:var(--check-bg);border-radius:5px;padding:1px 6px;margin-left:6px}
+input[type=text],input[type=date],select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:40px;width:100%}
+.numw{display:flex;align-items:center;gap:6px;max-width:200px}
+.numw input{font-family:var(--f-mono);text-align:right}
+.numw span{font-family:var(--f-mono);font-size:13px;color:var(--muted);min-width:28px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
+.seg button{border:0;border-radius:0;min-height:36px;padding:4px 14px;background:var(--surface)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"].y{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"].n{background:var(--ink);color:var(--surface)}
+.essentials{display:grid;gap:12px}
+@media(min-width:700px){.essentials{grid-template-columns:1fr 1fr}}
+.findings{display:flex;flex-direction:column;gap:8px}
+.fd{border-radius:10px;padding:10px 12px;border:1px solid var(--line);display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;align-items:start}
+.fd .g{grid-row:span 3}
+.fd b{font-weight:600}
+.fd .ref{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.fd .act{font-size:13px}
+.fd.off{opacity:.45}
+.pill{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-radius:6px;padding:3px 7px;white-space:nowrap;display:inline-block}
+.pill.danger{background:var(--danger-bg);color:var(--danger)}
+.pill.non_conforme{background:var(--nc-bg);color:var(--nc)}
+.pill.a_verifier{background:var(--check-bg);color:var(--check)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.src{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.empty{color:var(--muted);font-size:14px;margin:0}
+.ai-box{display:flex;flex-direction:column;gap:10px}
+.status{font-size:13px;color:var(--muted);margin:0}
+.mini-list{margin:0;padding-left:18px;font-size:14px}
+.note{font-size:13px;color:var(--muted);background:var(--sunk);border-radius:8px;padding:10px 12px;margin:0}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sum{border-radius:10px;padding:12px;border:1px solid var(--line);background:var(--surface)}
+.sum .v{font-family:var(--f-display);font-size:34px;line-height:1}
+.sum .l{font-size:12px;color:var(--muted)}
+.sum.d .v{color:var(--danger)} .sum.n .v{color:var(--nc)} .sum.c .v{color:var(--check)}
+.verdict{font-family:var(--f-display);font-size:22px;text-transform:uppercase;padding:10px 14px;border-radius:10px}
+.verdict.d{background:var(--danger-bg);color:var(--danger)} .verdict.n{background:var(--nc-bg);color:var(--nc)} .verdict.o{background:var(--ok-bg);color:var(--ok)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:10px;font-size:14px;z-index:20;max-width:90vw}
+.zone-foot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.shell.solo{grid-template-columns:minmax(0,1fr);max-width:820px}
+.modes{display:grid;gap:12px}
+@media(min-width:700px){.modes{grid-template-columns:1fr 1fr}}
+.mode{flex-direction:column;align-items:flex-start;text-align:left;gap:8px;padding:20px;border-radius:12px;min-height:170px}
+.mode .mt{font-family:var(--f-display);font-size:30px;text-transform:uppercase;line-height:1}
+.mode .md{font-weight:400;color:var(--muted)}
+.mode .mm{font-family:var(--f-mono);font-size:12px;margin-top:auto}
+.mode.primary-mode{border:2px solid var(--accent)}
+.mode.primary-mode .mt{color:var(--accent)}
+.btn.big{min-height:52px;padding:10px 18px;font-size:16px}
+@media (prefers-reduced-motion:no-preference){.chip,button{transition:background .15s,border-color .15s}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in wrap">
+    <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect x="24" y="4" width="8" height="14" fill="var(--ink)"/><path d="M4 22 L20 8 L36 22 Z" fill="var(--ink)"/><rect x="9" y="22" width="22" height="14" fill="var(--brand)"/><rect x="17" y="27" width="6" height="9" fill="var(--accent)"/></svg>
+    <div class="brand"><h1>Diagnostic Fumisterie</h1><p>ProRamonage 64 · NF DTU 24.1 / 24.2 · arrêté 1969 · avis techniques</p></div>
+    <div class="top-actions"><button class="small primary" id="btnAll" type="button" hidden>Analyser tout</button><button class="small ghost" id="btnMode" type="button" hidden>Mode</button><button class="small ghost" id="btnHome" type="button">Accueil</button><button class="small ghost" id="btnExample" type="button">Exemple</button><button class="small" id="btnNew" type="button">Nouveau</button></div>
+  </div>
+  <div class="stripe"></div>
+</header>
+<div id="confirmBar" class="wrap" hidden><div class="confirm" style="max-width:1180px;margin:10px auto 0"><span>Effacer le diagnostic en cours (photos, mesures, analyses) ?</span><button class="small primary" id="cfYes" type="button">Oui, tout effacer</button><button class="small" id="cfNo" type="button">Annuler</button></div></div>
+
+<div class="shell wrap">
+  <nav class="rail" id="rail" aria-label="Zones de l'installation"></nav>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ================================================================== données */
+const SOLID=['buches','granules','insert','foyer_ouvert','cuisiniere'];
+const MACONNE=['boisseaux','briques','tubage'];
+const METAL=['dpi','sp','plastique'];
+const LABELS={appareil:{buches:'Poêle à bûches',granules:'Poêle / chaudière à granulés',insert:'Insert / foyer fermé',foyer_ouvert:'Foyer ouvert / âtre',cuisiniere:'Cuisinière bois',gaz:'Chaudière gaz',fioul:'Chaudière fioul'},
+conduit:{boisseaux:'Maçonné boisseaux',briques:'Maçonné briques',tubage:'Tubage dans conduit maçonné',dpi:'Métallique double paroi isolé',sp:'Métallique simple paroi',plastique:'Plastique (condensation)'},
+depart:{plafond:'Départ plafond',sol:'Départ au sol / console',arriere:'Sortie arrière (té à l’appareil)'},
+ventilation:{naturelle:'Naturelle',vmc_auto:'VMC autoréglable',vmc_hygro:'VMC hygroréglable',aucune:'Aucune'},
+toiture:{pente15:'Pente ≥ 15°',faible:'Pente < 15°',terrasse:'Toiture-terrasse'},
+cr_type:{sp:'Simple paroi',dpi:'Double paroi isolé'}};
+const opts=k=>Object.entries(LABELS[k]);
+
+/* Zones : photos d'abord. "fields" = facultatif, replié. */
+const ZONES=[
+ {id:'install',title:'Infos',intro:'Remplissez ce que vous savez. Ce qui reste vide est déduit des photos ou traité au cas le plus courant.',shots:[],
+  essentials:['appareil','conduit','toiture','ventilation'],
+  fields:[{id:'appareil',label:'Appareil',type:'select',opts:opts('appareil')},{id:'conduit',label:'Conduit de fumée',type:'select',opts:opts('conduit')},{id:'toiture',label:'Toiture',type:'select',opts:opts('toiture')},{id:'ventilation',label:'Ventilation du logement',type:'select',opts:opts('ventilation')},
+   {id:'client',label:'Client',type:'text'},{id:'adresse',label:'Adresse du chantier',type:'text'},{id:'date',label:'Date',type:'date'},
+   {id:'puissance',label:'Puissance utile',type:'num',unit:'kW'},{id:'etanche',label:'Appareil étanche (ventouse / EVAPDC)',type:'yn'},{id:'atec',label:'Conduit sous avis technique fabricant (ATEC / DTA)',type:'yn',hint:'ex. système Poujoulat, Joncoux, Schiedel'},{id:'collectif',label:'Conduit collectif (shunt / Alsace)',type:'yn'},{id:'depart',label:'Départ du conduit',type:'select',opts:opts('depart')},{id:'hotte_cuisine',label:'Hotte de cuisine motorisée',type:'yn'},{id:'ramonage12',label:'Ramonage de moins de 12 mois',type:'yn'},{id:'feu_cheminee',label:'Feu de cheminée signalé',type:'yn'}]},
+ {id:'vrac',title:'Photos rapides',intro:'Pas le temps de trier ? Mettez toutes les photos ici, l’analyse retrouve la zone de chaque problème.',
+  shots:[['Toutes les photos de l’installation','plusieurs à la fois depuis la galerie',true]],tips:['Une photo d’ensemble par zone suffit pour un premier avis.','Ajoutez la plaque signalétique du conduit si elle existe : elle donne la distance de sécurité.','Posez un mètre dans le cadre pour les distances et hauteurs.'],fields:[]},
+ {id:'appareil',title:'Appareil',intro:'L’appareil, son implantation et la protection du sol.',
+  shots:[['Vue d’ensemble de l’appareil','recul, parois et sol visibles'],['Plaque signalétique de l’appareil','lisible, sans reflet'],['Sol devant le foyer','plaque de protection'],['Intérieur du foyer','vitre, joints, réfractaires']],
+  tips:['Distances aux parois combustibles selon la notice fabricant.','Sol combustible protégé devant la porte.','Joints, vitre, réfractaires.','Granulés : creuset, échangeur, extracteur.'],
+  fields:[{id:'dist_app_ok',label:'Distances aux parois conformes à la notice',type:'yn'},{id:'sol_protege',label:'Sol protégé devant l’appareil',type:'yn'},{id:'joints_ok',label:'Joints et vitre en bon état',type:'yn'}]},
+ {id:'raccord',title:'Raccordement',intro:'De la buse de l’appareil jusqu’à l’entrée dans le conduit.',
+  shots:[['Buse et emboîtement','gros plan'],['Tracé complet du raccordement','de la buse au plafond / mur'],['Coudes et partie horizontale','mètre visible si possible'],['Distance aux matériaux combustibles','mètre entre conduit et paroi']],
+  tips:['Longueur horizontale : 3 m maximum (2 m en collectif).','Somme des angles des coudes : 180° maximum.','Diamètre ≥ buse, partie mâle vers le bas, ni mastic ni adhésif.','Ni clé de tirage ni contre-pente.'],
+  fields:[{id:'cr_type',label:'Type de raccordement',type:'select',opts:opts('cr_type')},{id:'buse_diam',label:'Diamètre de la buse',type:'num',unit:'mm'},{id:'cr_diam',label:'Diamètre du raccordement',type:'num',unit:'mm'},{id:'cr_horiz',label:'Longueur horizontale',type:'num',unit:'m'},{id:'cr_angles',label:'Somme des angles des coudes',type:'num',unit:'°'},{id:'cr_dist',label:'Distance aux combustibles',type:'num',unit:'cm'},{id:'cr_protection',label:'Protection murale avec lame d’air',type:'yn'},{id:'cr_male_bas',label:'Partie mâle vers le bas',type:'yn'},{id:'cr_mastic',label:'Mastic ou adhésif à la buse',type:'yn'},{id:'cr_obturation',label:'Clé de tirage / obturateur',type:'yn'},{id:'cr_visible',label:'Visible sur tout le parcours',type:'yn'},{id:'cr_contrepente',label:'Contre-pente ou point bas',type:'yn'}]},
+ {id:'te',title:'Té & plaque',intro:'Accès au ramonage et identification du conduit.',
+  shots:[['Plaque signalétique du conduit','toutes les lignes lisibles'],['Té de purge / boîte à suie','tampon visible'],['Trappe de ramonage','ouverte si possible']],
+  tips:['La désignation donne la distance de sécurité : « G50 » = 50 mm des combustibles.','Bois : conduit classé G (feu de cheminée) et T450.','Départ plafond : té avec boîte à suie ≥ 5 cm et tampon.'],
+  fields:[{id:'cf_designation',label:'Désignation lue sur la plaque',type:'text',hint:'ex. T450 N1 D V2 L50040 G50'},{id:'plaque_cf',label:'Plaque signalétique présente',type:'yn'},{id:'te_present',label:'Té avec tampon / boîte à suie',type:'yn'}]},
+ {id:'hotte',title:'Hotte',intro:'Inserts, foyers fermés et foyers ouverts (NF DTU 24.2).',when:f=>!f.appareil||['insert','foyer_ouvert'].includes(f.appareil),
+  shots:[['Hotte de face','grilles visibles'],['Grille haute et plafond','dans le même cadre'],['Intérieur de la hotte','isolation, conduit'],['Poutre / linteau','côté foyer']],
+  tips:['Insert : grille basse ≥ 400 cm², grille haute ≥ 500 cm².','Grille de sortie d’air chaud à 30 cm minimum sous le plafond.','Raccordement métallique rigide ou flexible double peau lisse, visible (au besoin par une grille).','Hotte incombustible ou isolée, poutre bois isolée.','Faux plafond déflecteur : ventilé 2 × 20 cm² et isolé.'],
+  fields:[{id:'grille_present',label:'Grilles de ventilation de hotte',type:'yn'},{id:'grille_basse',label:'Section grille basse (convection)',type:'num',unit:'cm²',when:f=>f.appareil==='insert'},{id:'grille_haute',label:'Section grille haute (convection)',type:'num',unit:'cm²',when:f=>f.appareil==='insert'},{id:'flex_simple',label:'Raccordement flexible simple peau',type:'yn'},{id:'grille_plafond',label:'Haut de grille → plafond',type:'num',unit:'cm'},{id:'hotte_incomb',label:'Hotte incombustible ou isolée',type:'yn'},{id:'poutre_isolee',label:'Poutre bois isolée',type:'yn'}]},
+ {id:'conduit',title:'Conduit',intro:'Traversées, combles, coffrages, dévoiements, état intérieur.',
+  shots:[['Traversée de plafond / plancher','écart au feu'],['Conduit dans les combles','bois et isolant proches'],['Coffrage / gaine','grilles de ventilation'],['Intérieur du conduit (caméra)','fissures, bistre']],
+  tips:['Distance aux bois et isolants combustibles (voir plaque).','2 dévoiements maximum, 20° maçonné / 45° métallique.','Métallique en pièce habitable : coffré, coffrage ventilé.','Caméra : fissures, joints, bistre.'],
+  fields:[{id:'cf_dist',label:'Distance aux combustibles',type:'num',unit:'cm'},{id:'cf_diam',label:'Diamètre (ou plus petit côté) du conduit',type:'num',unit:'mm'},{id:'cf_epaisseur',label:'Épaisseur de paroi (briques)',type:'num',unit:'cm',when:f=>f.conduit==='briques'},{id:'devoiements',label:'Nombre de dévoiements',type:'num',unit:''},{id:'dev_angle',label:'Angle maxi avec la verticale',type:'num',unit:'°'},{id:'cf_coffre',label:'Coffré en pièce habitable (métal)',type:'yn'},{id:'cf_coffrage_ventile',label:'Coffrage ventilé haut et bas',type:'yn'},{id:'cf_jonction_fp',label:'Jonction dans un faux plafond',type:'yn'},{id:'cf_multi',label:'Plusieurs appareils sur le conduit',type:'yn'},{id:'cf_fissures',label:'Fissures / défaut d’étanchéité',type:'yn'},{id:'cf_bistre',label:'Bistre / goudron',type:'yn'}]},
+ {id:'air',title:'Amenée d’air',intro:'Air de combustion et ventilation du logement.',when:f=>f.etanche!=='oui',
+  shots:[['Entrée d’air de la pièce','grille, section lisible'],['Bouches de ventilation / VMC','hygro ou auto'],['Hotte de cuisine','si présente']],
+  tips:['Poêle ≤ 25 kW : 50 cm² ; foyer ouvert : 200 cm² mini (arrêté du 23/02/2009).','Pièce sans fenêtre : sortie d’air haute de 100 cm² vers l’extérieur.','Entrée d’air permanente, jamais obturable.','VMC hygroréglable interdite avec appareil non étanche.','Hotte motorisée : incompatible sauf étude.'],
+  fields:[{id:'air_present',label:'Amenée d’air directe',type:'yn'},{id:'air_section',label:'Section libre',type:'num',unit:'cm²'},{id:'insert_ferme',label:'Insert utilisé porte fermée seulement',type:'yn',when:f=>f.appareil==='insert'},{id:'air_obstruee',label:'Entrée d’air bouchée',type:'yn'},{id:'sortie_haute',label:'Sortie d’air haute 100 cm² (pièce sans fenêtre)',type:'yn'}]},
+ {id:'toit',title:'Sortie de toit',intro:'Souche, débouché et environnement à moins de 8 m.',
+  shots:[['Souche avec le faîtage','de côté, pour juger la hauteur'],['Environnement à moins de 8 m','bâtiments, lucarnes'],['Débouché / chapeau','élément terminal'],['Solin et couronnement','raccord toiture']],
+  tips:['0,40 m au-dessus du faîtage et de toute construction à moins de 8 m.','Toiture < 15° : 1,20 m au-dessus de la sortie.','Sous avis technique : hauteur selon l’avis du fabricant.','Pas d’antenne sur la souche ; couronnement à goutte d’eau.'],
+  fields:[{id:'h_faitage',label:'Débouché au-dessus du faîtage',type:'num',unit:'m',hint:'négatif si en dessous'},{id:'h_obstacle',label:'Au-dessus d’une construction à < 8 m',type:'num',unit:'m',hint:'vide si aucune'},{id:'h_sortie',label:'Au-dessus du point de sortie',type:'num',unit:'m',when:f=>['faible','terrasse'].includes(f.toiture)},{id:'antirefouleur',label:'Aspirateur anti-refouleur',type:'yn'},{id:'antenne',label:'Antenne fixée sur la souche',type:'yn'},{id:'souche_ok',label:'Souche et solin en bon état',type:'yn'}]},
+ {id:'rapport',title:'Rapport',intro:'Les non-conformités relevées, à valider avant export.'}
+];
+const ZMAP=Object.fromEntries(ZONES.map(z=>[z.id,z]));
+const ZONE_IDS=ZONES.filter(z=>!['install','vrac','rapport'].includes(z.id)).map(z=>z.id);
+
+/* ================================================================== état */
+const KEY='diagFumi.v2';
+const fresh=()=>({mode:null,f:{date:new Date().toISOString().slice(0,10)},ded:{},ai:{},off:[],active:'install',synth:''});
+let S=fresh();
+const photos={};
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.f)S=Object.assign(fresh(),s)}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+/* contexte effectif : saisie > déduit des photos */
+function eff(){const e={...S.ded};for(const[k,v]of Object.entries(S.f))if(v!==''&&v!=null)e[k]=v;return e}
+const zoneActive=(z,f)=>!z.when||z.when(f);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const GRAV={danger:'Danger',non_conforme:'Non conforme',a_verifier:'À vérifier',ok:'Conforme'};
+const GORD={danger:0,non_conforme:1,a_verifier:2};
+const fr=x=>String(x).replace('.',',');
+let sampleFn=null,sampleLimits=null,downloads=null,aiReady=false,standalone=true;
+/* Hors de Claude (GitHub Pages) : appel direct de l'API Anthropic avec la clé saisie dans l'appli.
+   La clé reste dans le navigateur de l'appareil (localStorage) et n'est envoyée qu'à api.anthropic.com. */
+const MODEL='claude-sonnet-5-5';const KEY_API='diagFumi.apiKey';
+const getKey=()=>{try{return localStorage.getItem(KEY_API)||''}catch(e){return ''}};
+const blobToB64=b=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(b)});
+function parseJSONloose(t){try{return JSON.parse(t)}catch(e){}const m=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(m){try{return JSON.parse(m[1])}catch(e){}}const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}throw{code:'invalid_json',text:t}}
+function makeApiSample(key){
+  const call=async(prompt,opts={})=>{
+    const content=[];for(const b of [].concat(opts.images?Array.from(opts.images):[]))content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:await blobToB64(b)}});
+    content.push({type:'text',text:prompt});
+    let r;try{r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal:opts.signal,headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:MODEL,max_tokens:4000,messages:[{role:'user',content}]})})}
+    catch(e){throw{code:e&&e.name==='AbortError'?'cancelled':'upstream_error',message:String(e)}}
+    if(!r.ok){const m=await r.text().catch(()=>'');throw{code:r.status===401||r.status===403?'bad_key':r.status===429?'rate_limited':r.status===413?'image_rejected':'upstream_error',message:m}}
+    const j=await r.json();const text=(j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
+    if(opts.onText)opts.onText({text,delta:text});return{text,truncated:j.stop_reason==='max_tokens'}};
+  call.json=async(p,o)=>{const{text}=await call(p,o);return parseJSONloose(text)};
+  call.limits=async()=>({maxPromptBytes:200000,images:{maxCount:8,mediaTypes:['image/jpeg','image/png','image/webp']}});
+  return call}
+function useApiKey(){const k=getKey();if(k&&standalone){sampleFn=makeApiSample(k);sampleLimits={images:{maxCount:8}};aiReady=true}else if(standalone){sampleFn=null;aiReady=false}}
+const busy={};
+
+/* ================================================================== règles chiffrées
+   Principe : une règle ne se déclenche que si l'info existe. Info absente = cas le plus courant
+   (appareil inconnu → règles bois ; toiture inconnue → pente ≥ 15° ; puissance inconnue → ≤ 25 kW). */
+const n=v=>{if(v===''||v==null)return null;const x=parseFloat(String(v).replace(',','.'));return isNaN(x)?null:x};
+function parseDesignation(s){if(!s)return null;const u=String(s).toUpperCase();
+  const T=u.match(/T\s?(\d{3})/);const G=u.match(/\bG\s?(\d{1,4})?\b/);const O=/\bO\s?(\d{1,4})?\b/.test(u)&&!G;
+  return{T:T?+T[1]:null,G:!!G,Gmm:G&&G[1]?+G[1]:null,O,Omm:(u.match(/\bO\s?(\d{1,4})\b/)||[])[1]?+(u.match(/\bO\s?(\d{1,4})\b/)[1]):null,W:/\bW\b/.test(u)}}
+function rules(f){
+  const out=[];const add=(zone,g,constat,ref,action)=>out.push({key:'r:'+zone+':'+constat.slice(0,40),zone,g,constat,ref,action,src:'Règle'});
+  const unkApp=!f.appareil, solid=SOLID.includes(f.appareil)||unkApp, et=f.etanche==='oui', metal=METAL.includes(f.conduit), mac=MACONNE.includes(f.conduit), atec=f.atec==='oui';
+  const hyp=unkApp?' (appareil non précisé : règle bois appliquée)':'';
+  const des=parseDesignation(f.cf_designation);
+  // général
+  if(f.ramonage12==='non')add('install','non_conforme','Dernier ramonage de plus de 12 mois.','Décret 2023-641 · CSP art. R1331-18','Ramonage au moins tous les 12 mois (le règlement sanitaire local peut en imposer 2, dont 1 en période de chauffe).');
+  if(f.feu_cheminee==='oui')add('conduit','danger','Feu de cheminée signalé.','NF DTU 24.1 annexe B5','Diagnostic complet du conduit avant toute remise en service.');
+  // désignation
+  if(des){
+    if(SOLID.includes(f.appareil)&&des.O)add('te','danger','Conduit non résistant au feu de cheminée (classe O) raccordé à un appareil bois.','NF DTU 24.1 P1-2 · désignations minimales','Classe G obligatoire pour bûches et granulés : remplacer ou tuber le conduit.');
+    if(des.T!=null){if(f.appareil==='buches'||f.appareil==='insert'||f.appareil==='foyer_ouvert'||f.appareil==='cuisiniere'){if(des.T<450)add('te','non_conforme',`Classe de température T${des.T} insuffisante pour un appareil à bûches (T450 requis).`,'NF DTU 24.1 P1-2','Conduit inadapté : à remplacer.')}
+      else if(f.appareil==='granules'&&des.T<200)add('te','non_conforme',`Classe T${des.T} insuffisante pour des granulés.`,'NF DTU 24.1 P1-2 · notice appareil','Vérifier la classe exigée par la notice ; conduit à remplacer.')}
+    if(f.appareil==='granules'&&!des.W&&f.conduit==='plastique')add('te','a_verifier','Conduit plastique avec granulés.','NF DTU 24.1','Vérifier la compatibilité dans l’avis technique.');
+  }
+  // appareil
+  if(f.dist_app_ok==='non')add('appareil','non_conforme','Distances de l’appareil aux parois combustibles inférieures à la notice.','Notice fabricant','Déplacer l’appareil ou protéger la paroi selon la notice.');
+  if(solid&&f.sol_protege==='non')add('appareil','non_conforme','Sol combustible non protégé devant l’appareil.','Notice fabricant · NF DTU 24.2','Poser une plaque de sol incombustible.');
+  if(f.joints_ok==='non')add('appareil','a_verifier','Joints ou vitre dégradés : risque de fuite de fumées.','Entretien appareil','Remplacer les joints / la vitre.');
+  // raccordement
+  const D=n(f.cr_diam),B=n(f.buse_diam),H=n(f.cr_horiz),A=n(f.cr_angles),dist=n(f.cr_dist);
+  if(D!=null&&B!=null&&D<B)add('raccord','non_conforme',`Raccordement Ø ${D} mm plus petit que la buse Ø ${B} mm.`,'NF DTU 24.1 ch. 13','Reprendre au diamètre de la buse ou plus.');
+  const hmax=f.collectif==='oui'?2:3;
+  if(H!=null&&H>hmax)add('raccord','non_conforme',`Longueur horizontale de ${fr(H)} m (maximum ${hmax} m).`,'NF DTU 24.1 ch. 13','Raccourcir le tracé.');
+  if(A!=null&&A>180)add('raccord','non_conforme',`Somme des angles des coudes de ${A}° (maximum 180°).`,'NF DTU 24.1 ch. 13','Supprimer un coude ou remplacer un 90° par deux 45°.');
+  if(dist!=null){
+    const ty=f.cr_type||'sp';let req=null,why='';
+    if(ty==='sp'){if(solid){const Dm=D||B||150;req=Math.max(3*Dm,375)/10;why='3 × Ø, mini 375 mm'+hyp;if(f.cr_protection==='oui'){req=Math.max(req/2,20);why='moitié avec protection, mini 200 mm'}}else{req=5;why='T100 à T160, selon classe'}}
+    else{req=solid?8:2;why=solid?'double paroi classe G, Ru 0,4 à 0,6':'T080 à T160'}
+    if(!f.cr_type)why+=' — type supposé simple paroi';
+    if(req!=null&&dist<req)add('raccord',solid&&dist<req/2?'danger':'non_conforme',`Raccordement à ${fr(dist)} cm des combustibles, ${fr(req)} cm requis (${why}).`,'NF DTU 24.1 ch. 13','Éloigner le conduit ou poser une protection murale avec lame d’air.');
+  }
+  if(f.cr_male_bas==='non')add('raccord','non_conforme','Emboîtements partie mâle vers le haut.','NF DTU 24.1 ch. 13','Remonter mâle vers le bas (sauf conduit classe D).');
+  if(f.cr_mastic==='oui')add('raccord','non_conforme','Emboîtement à la buse avec mastic ou adhésif.','NF DTU 24.1 ch. 13','Fixation mécanique uniquement, démontable.');
+  if(f.cr_obturation==='oui'&&f.appareil!=='foyer_ouvert')add('raccord','danger','Clé de tirage / obturateur sur le raccordement.','NF DTU 24.1 ch. 13','Déposer : risque de refoulement et d’intoxication au CO.');
+  if(f.cr_visible==='non')add('raccord','non_conforme','Raccordement non visible sur tout son parcours.','NF DTU 24.1 ch. 13','Rendre visible ou coffrage démontable ventilé (2 × 50 cm²).');
+  if(f.cr_contrepente==='oui')add('raccord','non_conforme','Contre-pente ou point bas sur le raccordement.','NF DTU 24.1 ch. 13','Reprendre la pente.');
+  // té / plaque
+  if(f.plaque_cf==='non'&&!f.cf_designation)add('te','non_conforme','Plaque signalétique du conduit absente.','NF DTU 24.1 § 5.4','Faire poser la plaque (désignation, installateur, fabricant, date, mention d’entretien).');
+  if(f.te_present==='non'&&!['insert','foyer_ouvert','cuisiniere'].includes(f.appareil)&&f.depart!=='sol')add('te','non_conforme','Pas de té avec tampon / boîte à suie en pied de conduit.','NF DTU 24.1 ch. 13.1','Poser un té avec boîte à suie ≥ 5 cm (sauf poêle ramonable par le foyer).');
+  // hotte
+  if(!f.appareil||['insert','foyer_ouvert'].includes(f.appareil)){
+    if(f.appareil==='insert'&&f.grille_present==='non')add('hotte','non_conforme','Hotte d’insert sans grilles de ventilation : risque de surchauffe.','NF DTU 24.2','Créer grilles d’entrée et de sortie d’air chaud.');
+    const gp=n(f.grille_plafond);if(gp!=null&&gp<30)add('hotte','non_conforme',`Grille haute à ${fr(gp)} cm du plafond (minimum 30 cm).`,'NF DTU 24.2','Abaisser la grille.');
+    if(f.hotte_incomb==='non')add('hotte','danger','Hotte combustible non isolée.','NF DTU 24.2','Isoler ou refaire en A2-s1,d0 ; arrêt conseillé.');
+    const gb=n(f.grille_basse),gh=n(f.grille_haute);
+    if(f.appareil==='insert'&&gb!=null&&gb<400)add('hotte','non_conforme',`Grille basse de convection de ${gb} cm² (400 cm² minimum).`,'NF DTU 24.2','Agrandir l’entrée d’air de convection.');
+    if(f.appareil==='insert'&&gh!=null&&gh<500)add('hotte','non_conforme',`Grille haute de convection de ${gh} cm² (500 cm² minimum).`,'NF DTU 24.2','Agrandir la sortie d’air chaud.');
+    if(f.flex_simple==='oui')add('hotte','non_conforme','Raccordement en flexible simple peau.','NF DTU 24.2','Flexible double peau à paroi intérieure lisse ou rigide métallique.');
+    const cdi=n(f.cf_diam);if(cdi!=null){const ouvert=f.appareil==='foyer_ouvert'||(f.appareil==='insert'&&f.insert_ferme!=='oui');const mini=ouvert?180:150;if(cdi<mini)add('conduit','non_conforme',`Conduit de ${cdi} mm, ${mini} mm minimum pour ${ouvert?'un foyer ouvert / insert porte ouverte':'un insert porte fermée'}.`,'NF DTU 24.2 · NF EN 13384-1','Sauf note de calcul NF EN 13384-1 : conduit à redimensionner.')}
+    if(f.poutre_isolee==='non')add('hotte','danger','Poutre bois non isolée au-dessus du foyer.','NF DTU 24.2','Isoler la poutre avant utilisation.');
+  }
+  // conduit : distance de sécurité (plaque > avis technique > DTU)
+  const cd=n(f.cf_dist);
+  if(solid&&f.conduit==='sp')add('conduit','danger','Conduit simple paroi intérieur pour un appareil bois.','NF DTU 24.1 · distance de sécurité','Interdit (risque d’incendie et de brûlure) : remplacer par un double paroi isolé.');
+  if(SOLID.includes(f.appareil)&&f.conduit==='plastique')add('conduit','danger','Conduit plastique sur un appareil à combustible solide.','NF DTU 24.1','Interdit : remplacer le conduit.');
+  if(cd!=null){
+    let dtu=null,why='';
+    if(solid){if(f.conduit==='briques'){const e=n(f.cf_epaisseur);dtu=e!=null?Math.max(2,16-e):16;why=e!=null?'16 cm moins l’épaisseur':'16 cm moins l’épaisseur (non saisie)'}else if(f.conduit==='dpi'){dtu=8;why='double paroi G, Ru 0,4-0,6'}else{dtu=10;why='Ru inconnue, cas le plus défavorable'}}
+    else if(f.appareil==='gaz'){dtu=2;why='T ≤ 160'}else if(f.appareil==='fioul'){dtu=5;why='160 < T ≤ 250'}
+    const fab=des&&des.Gmm!=null?des.Gmm/10:(des&&des.Omm!=null?des.Omm/10:null);
+    let req=dtu,src=why+hyp;
+    if(fab!=null){if(atec){req=fab;src=`plaque ${des.Gmm!=null?'G'+des.Gmm:'O'+des.Omm}, conduit sous avis technique`}else{req=Math.max(fab,dtu??0);src=`max entre plaque (${fr(fab)} cm) et DTU (${fr(dtu??0)} cm)`}}
+    if(req!=null&&cd<req)add('conduit',cd<req/2?'danger':'non_conforme',`Conduit à ${fr(cd)} cm des combustibles, ${fr(req)} cm requis (${src}).`,'NF DTU 24.1 · distance de sécurité'+(atec?' · avis technique':''),'Créer l’écart au feu (chevêtre, plaque de distance) ou changer de conduit.');
+  }
+  const dv=n(f.devoiements),da=n(f.dev_angle);
+  if(dv!=null&&dv>2)add('conduit','non_conforme',`${dv} dévoiements (maximum 2).`,'NF DTU 24.1 · arrêté 22/10/1969','Reprendre le tracé.');
+  const amax=mac?20:45;if(da!=null&&da>amax)add('conduit','non_conforme',`Dévoiement de ${da}° avec la verticale (maximum ${amax}°${f.conduit?'':' , conduit supposé métallique'}).`,'NF DTU 24.1 · arrêté 22/10/1969 art. 7','Reprendre le dévoiement.');
+  if(metal&&f.cf_coffre==='non')add('conduit','non_conforme','Conduit métallique non coffré en pièce habitable.','NF DTU 24.1 § 10.2.3','Coffrer contre les chocs et déboîtements.');
+  if(solid&&f.cf_coffrage_ventile==='non')add('conduit','non_conforme','Coffrage non ventilé (fumées > 160 °C).','NF DTU 24.1 § 7.3 à 7.6','Orifices de 20 cm² haut et bas par pièce traversée.');
+  if(f.cf_jonction_fp==='oui')add('conduit','non_conforme','Jonction dans le volume d’un faux plafond.','NF DTU 24.1 ch. 13.1','Le conduit doit déboucher en entier dans la pièce de l’appareil.');
+  if(f.cf_multi==='oui')add('conduit','danger','Plusieurs appareils sur un conduit individuel.','Arrêté du 22/10/1969 · NF DTU 24.1','Un conduit individuel = un seul appareil.');
+  if(f.cf_fissures==='oui')add('conduit','danger','Fissures ou défaut d’étanchéité du conduit.','RSDT art. 31-1','Informer occupant et propriétaire ; remise en service après remise en état.');
+  if(f.cf_bistre==='oui')add('conduit','non_conforme','Bistre / goudron dans le conduit.','RSDT art. 31-1','Débistrage, contrôler combustible et usage.');
+  // air
+  if(!et&&solid){
+    const P=n(f.puissance),Sa=n(f.air_section);let req=null,why='';
+    if(f.appareil==='foyer_ouvert'||(f.appareil==='insert'&&f.insert_ferme!=='oui')){req=200;why='foyer ouvert / insert porte ouverte, et ≥ 1/4 de la section du conduit'}
+    else if(f.appareil==='insert'){const p=P??8;req=p<=8?50:p<=16?70:100;why=`insert porte fermée${P==null?', puissance supposée ≤ 8 kW':''}`}
+    else{const p=P??25;req=p<=25?50:p<=35?70:p<=50?100:150;why=P==null?'puissance supposée ≤ 25 kW':`${P} kW`}
+    if(f.air_present==='non')add('air','danger','Aucune amenée d’air directe pour un appareil non étanche.','Arrêté du 23/02/2009 · NF DTU 24.2','Créer une amenée d’air : risque de refoulement et de CO.');
+    else if(Sa!=null&&Sa<req)add('air','non_conforme',`Amenée d’air de ${Sa} cm², ${req} cm² requis (${why}).`,'Arrêté du 23/02/2009','Agrandir l’entrée d’air.');
+    if(f.ventilation==='vmc_hygro')add('air','danger','VMC hygroréglable avec un appareil non étanche.','CPT 3615','Association interdite : appareil étanche ou autre ventilation.');
+    if(f.ventilation==='vmc_auto')add('air','a_verifier','VMC autoréglable : risque d’inversion de tirage.','Arrêté du 24/03/1982 · NF EN 13384-1','Étude de dimensionnement, sinon sections de l’arrêté du 23/02/2009.');
+  }
+  if(!et&&f.hotte_cuisine==='oui')add('air','a_verifier','Hotte motorisée avec un appareil non étanche.','Arrêté du 24/03/1982','Incompatible sauf étude de dimensionnement.');
+  if(!et&&solid&&f.sortie_haute==='non')add('air','non_conforme','Pièce sans ouvrant et sans sortie d’air haute.','Arrêté du 23/02/2009','Créer une sortie d’air haute de 100 cm² débouchant à l’extérieur.');
+  if(!et&&f.air_obstruee==='oui')add('air','danger','Entrée d’air bouchée.','Arrêté du 23/02/2009','Dégager immédiatement.');
+  // toit
+  if(!et){
+    const hf=n(f.h_faitage),ho=n(f.h_obstacle),g=atec?'a_verifier':null;const atecTxt=atec?' Conduit sous avis technique : vérifier la hauteur prévue par l’avis (essais de couplage).':'';
+    if(!['faible','terrasse'].includes(f.toiture)){
+      if(hf!=null&&hf<0.40){const exc=hf>=0&&f.antirefouleur==='oui'&&ho==null;
+        if(!exc)add('toit',g||(hf<0?'danger':'non_conforme'),`Débouché à ${fr(hf.toFixed(2))} m ${hf<0?'sous le':'au-dessus du'} faîtage (0,40 m minimum).`,'Arrêté du 22/10/1969 art. 18','Rehausser la souche. Niveau du faîtage admis seulement avec anti-refouleur, pente > 15° et rien de plus haut à < 8 m.'+atecTxt);}
+    }else{const hs=n(f.h_sortie);if(hs!=null&&hs<1.20)add('toit',g||'non_conforme',`Débouché à ${fr(hs.toFixed(2))} m au-dessus de la sortie (1,20 m minimum).`,'Arrêté du 22/10/1969 art. 18','Rehausser le conduit.'+atecTxt)}
+    if(ho!=null&&ho<0.40)add('toit',g||'non_conforme',`Débouché à ${fr(ho.toFixed(2))} m au-dessus d’une construction à moins de 8 m (0,40 m minimum).`,'Arrêté du 22/10/1969 art. 18','Rehausser la souche.'+atecTxt);
+  }
+  if(f.antenne==='oui')add('toit','non_conforme','Antenne ou parabole fixée sur la souche.','NF DTU 24.1','Déplacer : la souche n’est pas un point d’ancrage, le tirage est perturbé.');
+  if(f.souche_ok==='non')add('toit','non_conforme','Souche ou solin dégradé.','NF DTU 24.1 · RSDT art. 31-1','Réparer l’étanchéité.');
+  return out;
+}
+
+/* ================================================================== base réglementaire pour l'IA */
+const KB=`RÈGLES (NF DTU 24.1 éd. 2020, NF DTU 24.2, arrêté du 22/10/1969, RSDT art. 31, arrêté du 23/02/2009, CPT 3615, décret 2023-641, avis techniques fabricants)
+Hiérarchie : un conduit « système » sous Avis Technique / DTA (Poujoulat, Joncoux, Schiedel, Isotip…) se pose selon son avis (distance, débouché, fixations) ; sinon NF DTU 24.1. Si la distance du fabricant diffère du DTU hors avis technique, on retient la plus grande.
+Désignation (NF EN 1443 / 1856) ex. « T450 N1 D V2 L50040 G50 » : T = classe de température ; N1 pression négative, P1/H1 positive ; D sec / W humide ; G = résiste au feu de cheminée, chiffre = distance de sécurité en mm (G50 = 50 mm) ; O = non résistant au feu de cheminée. Bûches : G et T450 minimum. Granulés : G obligatoire.
+Raccordement : visible, ne traverse pas d'autre local ; section ≥ buse, constante ; emboîtement mécanique (pas de mastic/adhésif), mâle vers le bas, ≥ 60 mm ; horizontale ≤ 3 m (2 m collectif) ; somme des angles des coudes ≤ 180°, pas de 90° à angle vif ; pas de contre-pente ; pas d'obturateur ; démontable. Distance simple paroi bois : 3 × Ø, mini 375 mm (moitié, mini 200 mm, avec panneau + lame d'air 2 cm). Double paroi G : 8 cm (Ru 0,4-0,6), 5 cm (Ru > 0,6).
+Conduit : ≤ 2 dévoiements, ≤ 20° maçonné / ≤ 45° métallique, ≤ 5 m entre coudes ; plaque signalétique au raccordement ou à la trappe ; départ plafond : té + boîte à suie ≥ 5 cm + tampon ; pas de jonction dans un faux plafond ; métal coffré en pièce habitable ; coffrage ventilé 20 cm² haut/bas si fumées > 160 °C ; une face accessible ; surface ≤ 50 °C en pièce habitable. Distances : boisseaux G 10/5/2 cm selon Ru ; briques 16 cm moins l'épaisseur (mini 2) ; simple paroi intérieur bois interdit. Un conduit individuel = un appareil. Après un feu de cheminée : diagnostic complet avant remise en service.
+Débouché (non étanche) : ≥ 0,40 m au-dessus de toute construction à moins de 8 m ; niveau du faîtage admis si pente > 15°, rien de plus haut à < 8 m et anti-refouleur ; toiture < 15° / terrasse : ≥ 1,20 m au-dessus de la sortie, ≥ 1 m au-dessus d'un acrotère > 0,20 m. Souche étanche, solin, couronnement à goutte d'eau, pas d'antenne ; terminal sans réduction de section ; métal : ≤ 1,50 m libre au-dessus de la dernière fixation sans haubans.
+Âtrerie (NF DTU 24.2) : conduit ≥ 180 mm pour âtre / foyer ouvert / insert porte ouverte, ≥ 150 mm pour insert porte fermée (sauf calcul NF EN 13384-1) ; raccordement métallique rigide ou flexible double peau lisse, visible directement ou par une grille dans la hotte, ramonable, sans clapet ; insert : grille de convection basse ≥ 400 cm² et haute ≥ 500 cm² ; protection des parois 30 mm d'isolant + alu, lame d'air 30 mm ; collerette ≤ 45°.
+Hotte d'insert : grilles de ventilation, grille haute à ≥ 30 cm sous plafond ; hotte incombustible ou isolée ; poutre bois isolée ; faux plafond déflecteur ventilé 2 × 20 cm² et isolé.
+Amenée d'air bois : poêle ≤ 25 kW 50 cm², ≤ 35 kW 70, ≤ 50 kW 100, ≤ 70 kW 150 ; foyer ouvert / insert porte ouverte ≥ 200 cm² et ≥ 1/4 section du conduit ; insert porte fermée ≤ 8 kW 50, ≤ 16 kW 70, ≤ 70 kW 100. VMC hygro + appareil non étanche : interdit. Hotte motorisée : incompatible sauf étude. Arrêté du 23/02/2009 (prévention CO, appareils ≤ 70 kW) : entrée d'air permanente non obturable ; pièce sans ouvrant : sortie d'air haute 100 cm² vers l'extérieur ; conduit non conforme neutralisé ; après intoxication, arrêt jusqu'à remise en état.
+Ramonage (décret 2023-641) : au moins tous les 12 mois, attestation remise sous 15 jours ouvrés. RSDT : défaut dangereux signalé à l'occupant et au propriétaire, remise en service après remise en état.`;
+
+/* ================================================================== constats */
+function allFindings(){
+  const f=eff();
+  const r=rules(f).filter(x=>!ZMAP[x.zone].when||zoneActive(ZMAP[x.zone],f));
+  const ai=[];
+  for(const[zid,res]of Object.entries(S.ai)){if(!res||!res.constats)continue;
+    res.constats.forEach((c,i)=>{let z=zid==='vrac'?(ZONE_IDS.includes(c.zone)?c.zone:'conduit'):zid;const g=GORD[c.gravite]!=null?c.gravite:'a_verifier';ai.push({key:`ai:${zid}:${i}`,zone:z,g,constat:c.constat,ref:c.reference||'',action:c.action||'',src:'Photo'})})}
+  return[...r,...ai].sort((a,b)=>GORD[a.g]-GORD[b.g]);
+}
+const counts=l=>({d:l.filter(x=>x.g==='danger').length,n:l.filter(x=>x.g==='non_conforme').length,c:l.filter(x=>x.g==='a_verifier').length});
+const pendingZones=()=>ZONES.filter(z=>(z.shots||[]).length&&(photos[z.id]||[]).length&&(!S.ai[z.id]||S.ai[z.id].stale)&&!busy[z.id]);
+
+/* ================================================================== rendu */
+function renderRail(){
+  const f=eff();const all=allFindings().filter(x=>!S.off.includes(x.key));
+  document.getElementById('rail').innerHTML=ZONES.map((z,i)=>{
+    const act=zoneActive(z,f);const c=counts(z.id==='rapport'?all:all.filter(x=>x.zone===z.id));const p=(photos[z.id]||[]).length;
+    const meta=(p?`<span class="dot p">${p}</span>`:'')+(c.d?`<span class="dot d">${c.d}</span>`:'')+(c.n?`<span class="dot n">${c.n}</span>`:'');
+    return `<button type="button" class="chip${act?'':' na'}" data-go="${z.id}" aria-current="${S.active===z.id}"><span class="n">${String(i).padStart(2,'0')}</span><span class="t">${esc(z.title)}</span><span class="meta">${meta}</span></button>`}).join('');
+  const b=document.getElementById('btnAll');const pz=pendingZones();b.hidden=!(S.mode==='complet'&&aiReady&&pz.length);b.textContent=`Analyser tout (${pz.length})`;
+}
+function fieldHTML(fd){
+  const v=S.f[fd.id]??'';const dv=!v&&S.ded[fd.id]?S.ded[fd.id]:null;
+  const dedTag=dv?`<span class="ded">photo : ${esc(fd.opts?(fd.opts.find(o=>o[0]===dv)||[,dv])[1]:dv)}</span>`:'';
+  if(fd.type==='yn')return `<div class="row f"><span class="q">${esc(fd.label)}${fd.hint?`<small style="display:block">${esc(fd.hint)}</small>`:''}</span><span class="seg" role="group" aria-label="${esc(fd.label)}"><button type="button" class="y" data-yn="${fd.id}" data-v="oui" aria-pressed="${v==='oui'}">Oui</button><button type="button" class="n" data-yn="${fd.id}" data-v="non" aria-pressed="${v==='non'}">Non</button></span></div>`;
+  if(fd.type==='select')return `<div class="f"><label for="f_${fd.id}">${esc(fd.label)}${dedTag}</label><select id="f_${fd.id}" data-field="${fd.id}"><option value="">Je ne sais pas</option>${fd.opts.map(([k,l])=>`<option value="${k}"${v===k?' selected':''}>${esc(l)}</option>`).join('')}</select></div>`;
+  if(fd.type==='num')return `<div class="row f"><label class="q" for="f_${fd.id}">${esc(fd.label)}${fd.hint?`<small style="display:block">${esc(fd.hint)}</small>`:''}</label><span class="numw"><input id="f_${fd.id}" data-field="${fd.id}" type="text" inputmode="decimal" value="${esc(v)}" placeholder="—"><span>${esc(fd.unit)}</span></span></div>`;
+  return `<div class="f"><label for="f_${fd.id}">${esc(fd.label)}${dedTag}</label><input id="f_${fd.id}" data-field="${fd.id}" type="${fd.type==='date'?'date':'text'}" value="${esc(v)}"${fd.hint?` placeholder="${esc(fd.hint)}"`:''}></div>`;
+}
+function findingHTML(x){const off=S.off.includes(x.key);
+  return `<div class="fd${off?' off':''}"><span class="g"><span class="pill ${x.g}">${GRAV[x.g]}</span></span><b>${esc(x.constat)}</b><span class="ref">${esc(x.ref)} · <span class="src">${x.src}</span></span><span class="act">${esc(x.action)} <button type="button" class="small ghost" data-off="${esc(x.key)}">${off?'Réintégrer':'Écarter'}</button></span></div>`}
+function zoneFindingsHTML(zid){
+  const list=allFindings().filter(x=>zid==='vrac'?x.key.startsWith('ai:vrac'):x.zone===zid);
+  return list.length?list.map(findingHTML).join(''):`<p class="empty">${(photos[zid]||[]).length?'Lancez l’analyse des photos.':'Prenez une ou plusieurs photos, c’est suffisant pour un premier avis.'}</p>`;
+}
+function aiHTML(zid){
+  const r=S.ai[zid],b=busy[zid];const ph=(photos[zid]||[]).length;
+  let h=`<div class="ai-box"><div class="toolbar">`;
+  if(b)h+=`<button type="button" class="small" data-stop="${zid}">Arrêter</button><span class="status" id="st_${zid}">${esc(b.msg)}</span>`;
+  else if(ph&&aiReady)h+=`<button type="button" class="primary" data-ai="${zid}">${r&&!r.stale?'Relancer l’analyse':'Analyser les photos'}</button>`;
+  h+=`</div>`;
+  if(!aiReady&&ph)h+=`<p class="status">Analyse des photos inactive : ajoutez votre clé API dans Accueil → Analyse IA. Les règles chiffrées fonctionnent sans elle.</p>`;
+  if(r&&!b){
+    if(r.error)h+=`<p class="status">${esc(r.error)}</p>`;
+    if(r.stale)h+=`<p class="status">Nouvelles photos depuis la dernière analyse.</p>`;
+    if(r.resume)h+=`<p style="margin:0">${esc(r.resume)}</p>`;
+    if(r.conformes?.length)h+=`<div><span class="pill ok">Vu conforme</span><ul class="mini-list">${r.conformes.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`;
+    if(r.a_mesurer?.length)h+=`<div><span class="eyebrow">Si possible, mesurer</span><ul class="mini-list">${r.a_mesurer.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`;
+  }
+  return h+`</div>`;
+}
+function renderZone(){
+  const z=ZMAP[S.active];const m=document.getElementById('main');
+  if(z.id==='rapport'){m.innerHTML=reportHTML();return}
+  const f=eff();const idx=ZONES.indexOf(z);const ph=photos[z.id]||[];
+  const fields=z.fields.filter(fd=>!fd.when||fd.when(f));
+  let h=`<section class="panel zone-head"><span class="eyebrow">${String(idx).padStart(2,'0')} / ${String(ZONES.length-1).padStart(2,'0')}</span><h2>${esc(z.title)}</h2><p>${esc(z.intro)}</p>${zoneActive(z,f)?'':`<p class="note" style="margin-top:10px">Zone non concernée pour cet appareil.</p>`}</section>`;
+  if(z.id==='install'){
+    const ess=fields.filter(fd=>z.essentials.includes(fd.id)),rest=fields.filter(fd=>!z.essentials.includes(fd.id));
+    h+=`<section class="panel"><h3>L’essentiel</h3><div class="essentials">${ess.map(fieldHTML).join('')}</div></section>`;
+    h+=`<details class="fold"><summary>Plus d’infos<small>facultatif</small></summary><div class="in"><div class="fields">${rest.map(fieldHTML).join('')}</div></div></details>`;
+    h+=`<p class="note">Les photos restent sur le téléphone le temps de la visite : exportez le rapport avant de fermer la page. Les réponses, elles, sont gardées.</p>`;
+  }else{
+    h+=`<section class="panel"><h3>Photos <span class="count">${ph.length}</span></h3><div class="shots">${z.shots.map(([l,s,multi])=>{const k=ph.filter(p=>p.label===l).length;return `<div class="shot${k?' has':''}"><span class="lbl">${esc(l)}<small>${k?`<span class="ok">${k} photo${k>1?'s':''}</span>`:esc(s)}</small></span><label class="btn small cam${multi?' primary':''}">${multi?'Ajouter':'Photo'}<input type="file" accept="image/*" ${multi?'multiple':'capture="environment"'} data-shot="${esc(l)}"></label></div>`}).join('')}${z.id==='vrac'?'':`<div class="shot"><span class="lbl">Autre photo<small>galerie, plusieurs possibles</small></span><label class="btn small cam">Ajouter<input type="file" accept="image/*" multiple data-shot=""></label></div>`}</div>${ph.length?`<div class="gallery">${ph.map((p,i)=>`<div class="ph"><img src="${p.url}" alt="${esc(p.label||'Photo')}"><span>${esc(p.label||'Photo '+(i+1))}</span><button type="button" data-rm="${i}" aria-label="Supprimer la photo">×</button></div>`).join('')}</div>`:''}</section>`;
+    h+=`<section class="panel"><h3>Non-conformités</h3><div class="findings" id="zf">${zoneFindingsHTML(z.id)}</div>${aiHTML(z.id)}</section>`;
+    h+=`<details class="fold"><summary>Points de contrôle</summary><div class="in"><ul class="tips">${z.tips.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div></details>`;
+    if(fields.length){const filled=fields.filter(fd=>S.f[fd.id]).length;h+=`<details class="fold"${filled?' open':''}><summary>Mesures et constats<small>facultatif${filled?` · ${filled} renseigné${filled>1?'s':''}`:''}</small></summary><div class="in"><div class="fields">${fields.map(fieldHTML).join('')}</div></div></details>`}
+  }
+  const prev=ZONES[idx-1],next=ZONES[idx+1];
+  h+=`<div class="zone-foot"><span>${prev?`<button type="button" data-go="${prev.id}">← ${esc(prev.title)}</button>`:''}</span><span>${next?`<button type="button" class="primary" data-go="${next.id}">${esc(next.title)} →</button>`:''}</span></div>`;
+  m.innerHTML=h;
+}
+function refreshFindings(){const el=document.getElementById('zf');if(el)el.innerHTML=zoneFindingsHTML(S.active);renderRail()}
+function verdictOf(c,any){return c.d?['d','Installation dangereuse — arrêt d’utilisation conseillé']:c.n?['n','Installation non conforme — travaux à prévoir']:['o',any?'Aucune non-conformité retenue':'Aucune non-conformité relevée']}
+function reportHTML(express){
+  const f=eff();const list=allFindings();const kept=list.filter(x=>!S.off.includes(x.key));const c=counts(kept);const v=verdictOf(c,list.length);
+  const anyPh=Object.values(photos).some(a=>a.length);const pz=pendingZones();
+  if(express&&!list.length)return '';
+  let h=express?'':`<section class="panel zone-head"><span class="eyebrow">Rapport</span><h2>${esc(S.f.client||'Diagnostic')}</h2><p>${esc([S.f.adresse,S.f.date].filter(Boolean).join(' · '))}</p><p>${esc(LABELS.appareil[f.appareil]||'Appareil non précisé')}${f.puissance?' '+esc(f.puissance)+' kW':''} · ${esc(LABELS.conduit[f.conduit]||'conduit non précisé')}</p></section>`;
+  if(express)h+=`<section class="panel"><h3>Client</h3><div class="essentials">${ZMAP.install.fields.filter(fd=>['client','adresse'].includes(fd.id)).map(fieldHTML).join('')}</div></section>`;
+  h+=`<div class="verdict ${v[0]}">${v[1]}</div><div class="summary"><div class="sum d"><div class="v">${c.d}</div><div class="l">Danger</div></div><div class="sum n"><div class="v">${c.n}</div><div class="l">Non conforme</div></div><div class="sum c"><div class="v">${c.c}</div><div class="l">À vérifier</div></div></div>`;
+  if(pz.length&&aiReady&&!express)h+=`<section class="panel"><div class="row"><span>${pz.length} zone${pz.length>1?'s':''} avec des photos pas encore analysées.</span><button type="button" class="primary small" data-all="1">Analyser tout</button></div></section>`;
+  h+=`<section class="panel"><h3>Non-conformités <span class="count">${kept.length} retenue${kept.length>1?'s':''} sur ${list.length}</span></h3><div class="findings">`;
+  if(!list.length)h+=`<p class="empty">Rien pour l’instant. Prenez des photos (zone « Photos rapides » pour aller vite) puis lancez l’analyse.</p>`;
+  for(const z of ZONES){const zl=list.filter(x=>x.zone===z.id);if(!zl.length)continue;h+=`<span class="eyebrow" style="margin-top:6px">${esc(z.title)}</span>`+zl.map(findingHTML).join('')}
+  h+=`</div></section>`;
+  h+=`<section class="panel"><h3>Synthèse pour le client</h3><textarea id="synth" rows="6" placeholder="Résumé en langage clair pour le client.">${esc(S.synth)}</textarea><div class="toolbar" style="margin-top:10px"><button type="button" class="small" id="btnSynth" ${aiReady&&kept.length?'':'disabled'}>Rédiger avec l’IA</button><span class="status" id="synthSt"></span></div></section>`;
+  h+=`<section class="panel"><h3>Export</h3><div class="toolbar"><button type="button" class="primary" id="btnExport">Télécharger le rapport${anyPh?' avec photos':''}</button><button type="button" id="btnCopy">Copier le texte</button></div><p class="status" style="margin-top:8px">Fichier HTML : s’ouvre dans un navigateur et s’imprime en PDF.</p><textarea id="copyArea" rows="4" hidden></textarea></section>`;
+  return h;
+}
+function renderHome(){
+  return `<section class="panel zone-head"><span class="eyebrow">Nouveau rendez-vous</span><h2>Comment on fait ?</h2><p>Choisissez selon le temps dont vous disposez. Vous pouvez changer de mode à tout moment, rien n’est perdu.</p></section>
+  <div class="modes"><button type="button" class="mode primary-mode" data-mode="express"><span class="mt">Express</span><span class="md">Photos seulement. Vous photographiez tout, l’appli trie, analyse et sort les non-conformités.</span><span class="mm">5 à 10 min</span></button>
+  <button type="button" class="mode" data-mode="complet"><span class="mt">Complet</span><span class="md">Zone par zone : photos guidées, mesures et constats. Les règles chiffrées du DTU tournent en direct.</span><span class="mm">20 à 30 min</span></button></div>${standalone?`<section class="panel"><h3>Analyse IA des photos</h3><p class="status" style="margin-bottom:10px">${getKey()?'Clé enregistrée sur cet appareil : l’analyse des photos est active.':'Pour analyser les photos, collez votre clé API Anthropic (console.anthropic.com → API Keys). Sans clé, les règles chiffrées fonctionnent quand même.'}</p><div class="toolbar"><input type="text" id="apiKey" autocomplete="off" spellcheck="false" placeholder="sk-ant-…" value="" style="flex:1;min-width:200px"><button type="button" class="primary small" id="btnKey">Enregistrer</button>${getKey()?'<button type="button" class="small" id="btnKeyDel">Effacer la clé</button>':''}</div><p class="status" style="margin-top:8px">La clé reste dans ce navigateur et n’est envoyée qu’à Anthropic. Ne la mettez pas dans le code publié sur GitHub.</p></section>`:''}`}
+function renderExpress(){
+  const z=ZMAP.vrac;const ph=photos.vrac||[];const ess=ZMAP.install.fields.filter(fd=>ZMAP.install.essentials.includes(fd.id));
+  let h=`<section class="panel zone-head"><span class="eyebrow">Mode express</span><h2>Photographiez tout</h2><p>Appareil, raccordement, plaque, traversées, combles, entrée d’air, souche. Une photo par élément suffit.</p></section>`;
+  h+=`<section class="panel"><div class="toolbar"><label class="btn primary cam big">Prendre une photo<input type="file" accept="image/*" capture="environment" data-shot=""></label><label class="btn cam big">Depuis la galerie<input type="file" accept="image/*" multiple data-shot=""></label><span class="status">${ph.length} photo${ph.length>1?'s':''}</span></div>${ph.length?`<div class="gallery">${ph.map((p,i)=>`<div class="ph"><img src="${p.url}" alt="Photo ${i+1}"><button type="button" data-rm="${i}" aria-label="Supprimer la photo">×</button></div>`).join('')}</div>`:''}<div style="margin-top:14px">${aiHTML('vrac')}</div></section>`;
+  h+=`<details class="fold"><summary>Ce que vous savez déjà<small>facultatif · améliore le résultat</small></summary><div class="in"><div class="essentials">${ess.map(fieldHTML).join('')}</div></div></details>`;
+  h+=reportHTML(true);
+  return h;
+}
+function render(){
+  const rail=document.getElementById('rail'),shell=document.querySelector('.shell'),m=document.getElementById('main');
+  document.getElementById('btnMode').hidden=!S.mode;document.getElementById('btnMode').textContent=S.mode==='express'?'Passer en complet':'Passer en express';
+  if(S.mode!=='complet'){rail.hidden=true;shell.classList.add('solo');if(S.active!=='vrac'&&S.mode==='express')S.active='vrac';m.innerHTML=S.mode?renderExpress():renderHome();const b=document.getElementById('btnAll');b.hidden=true;return}
+  rail.hidden=false;shell.classList.remove('solo');renderRail();renderZone()}
+
+/* ================================================================== photos */
+function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file);const i=new Image();i.onload=()=>res({i,u});i.onerror=()=>{URL.revokeObjectURL(u);rej()};i.src=u})}
+function draw(img,max,q,asUrl){const k=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);return asUrl?c.toDataURL('image/jpeg',q):new Promise(r=>c.toBlob(r,'image/jpeg',q))}
+async function addPhotos(zid,files,label){
+  photos[zid]=photos[zid]||[];toast('Préparation des photos…');
+  for(const file of files){try{const{i,u}=await loadImg(file);const blob=await draw(i,1600,.85);const thumb=draw(i,720,.7,true);URL.revokeObjectURL(u);photos[zid].push({label:label||'',blob,url:URL.createObjectURL(blob),thumb})}catch(e){toast('Image illisible : '+(file.name||'photo'))}}
+  if(S.ai[zid])S.ai[zid].stale=true;save();render();
+}
+
+/* ================================================================== IA */
+function ctxText(){const f=eff();const L=(k,v)=>LABELS[k][v]||'non précisé';
+  return[`Appareil : ${L('appareil',f.appareil)}${f.puissance?' ('+f.puissance+' kW)':''}`,`Étanche : ${f.etanche||'non précisé'}`,`Conduit : ${L('conduit',f.conduit)}${f.collectif==='oui'?' (collectif)':''}${f.atec==='oui'?' — sous avis technique':''}`,`Désignation plaque : ${f.cf_designation||'non relevée'}`,`Départ : ${L('depart',f.depart)}`,`Ventilation : ${L('ventilation',f.ventilation)}`,`Toiture : ${L('toiture',f.toiture)}`].join('\n')}
+function answersText(z){return z.fields.filter(fd=>S.f[fd.id]).map(fd=>{let v=S.f[fd.id];if(fd.type==='select')v=(fd.opts.find(o=>o[0]===v)||[,v])[1];return `- ${fd.label} : ${v}${fd.unit?' '+fd.unit:''}`}).join('\n')||'- rien de saisi'}
+async function analyze(zid){
+  const z=ZMAP[zid];const all=photos[zid]||[];if(!sampleFn||!all.length)return;
+  const max=sampleLimits?.images?.maxCount||5;const vrac=zid==='vrac';
+  const chunks=[];if(vrac){for(let i=0;i<all.length;i+=max)chunks.push(all.slice(i,i+max))}else chunks.push(all.slice(-max));
+  const ctl=new AbortController();busy[zid]={ctl,msg:'Analyse en cours… 30 s à 1 min'+(chunks.length>1?` par lot (${chunks.length} lots)`:'')};render();
+  const merged={resume:'',constats:[],conformes:[],a_mesurer:[]};
+  try{
+  for(let ci=0;ci<chunks.length;ci++){const ph=chunks[ci];
+  if(chunks.length>1){busy[zid].msg=`Analyse du lot ${ci+1} / ${chunks.length}…`;const el=document.getElementById('st_'+zid);if(el)el.textContent=busy[zid].msg}
+  const prompt=`Tu es ramoneur-fumiste expert (titre DRAM, France). Tu analyses ${ph.length} photo(s) ${vrac?'de toute une installation (photos non triées)':`de la zone « ${z.title} »`} pour relever les NON-CONFORMITÉS.
+
+CE QUE LE RAMONEUR A SAISI (souvent incomplet, c'est normal)
+${ctxText()}
+${vrac?'':answersText(z)}
+
+PHOTOS
+${ph.map((p,i)=>`Photo ${i+1} : ${p.label||'sans légende'}`).join('\n')}
+
+${KB}
+
+CONSIGNES
+- Travaille avec ce que tu as. Info manquante : déduis-la des photos (type d'appareil, de conduit, toiture, désignation lisible sur une plaque) ; sinon raisonne sur le cas le plus courant et dis-le dans le constat. Ne refuse jamais faute d'info.
+- Relève ce qui est visible. Distance ou hauteur sans repère de mesure : estime-la si l'image le permet et classe en « a_verifier » avec la mesure à faire ; classe « non_conforme » ou « danger » seulement si l'écart est évident.
+- Gravité : « danger » = risque immédiat d'incendie ou de CO ; « non_conforme » = écart à corriger ; « a_verifier » = doute.
+- Référence courte (ex. « NF DTU 24.1 ch. 13 », « Arrêté 22/10/1969 art. 18 », « Avis technique fabricant »). Français, phrases courtes, vocabulaire du métier.
+- Pour chaque constat, « zone » parmi : appareil, raccord, te, hotte, conduit, air, toit.
+
+Réponds UNIQUEMENT avec ce JSON :
+{"resume":"une phrase","constats":[{"zone":"…","constat":"…","gravite":"danger|non_conforme|a_verifier","reference":"…","action":"…"}],"conformes":["…"],"a_mesurer":["…"],"deductions":{"appareil":"buches|granules|insert|foyer_ouvert|cuisiniere|gaz|fioul|","conduit":"boisseaux|briques|tubage|dpi|sp|plastique|","toiture":"pente15|faible|terrasse|","cf_designation":"texte lu ou vide"}}`;
+    const r=await sampleFn.json(prompt,{images:ph.map(p=>p.blob),signal:ctl.signal,cache:false,onText:()=>{const el=document.getElementById('st_'+zid);if(el&&chunks.length===1)el.textContent='Rédaction du résultat…'}});
+    const L=a=>Array.isArray(a)?a.map(String):[];
+    if(r?.resume)merged.resume+=(merged.resume?' ':'')+String(r.resume);
+    if(Array.isArray(r?.constats))merged.constats.push(...r.constats.filter(c=>c&&c.constat).map(c=>({zone:String(c.zone||''),constat:String(c.constat),gravite:String(c.gravite||'a_verifier'),reference:String(c.reference||''),action:String(c.action||'')})));
+    merged.conformes.push(...L(r?.conformes));merged.a_mesurer.push(...L(r?.a_mesurer));
+    const d=r?.deductions||{};for(const k of['appareil','conduit','toiture']){const v=String(d[k]||'');if(LABELS[k][v]&&!S.ded[k])S.ded[k]=v}
+    if(d.cf_designation&&String(d.cf_designation).length>3&&!S.ded.cf_designation)S.ded.cf_designation=String(d.cf_designation).slice(0,60);
+  }
+    S.ai[zid]=merged;
+  }catch(e){
+    const msg={cancelled:null,not_granted:'Analyse refusée : autorisez la page à utiliser Claude.',rate_limited:'Trop de demandes rapprochées. Réessayez dans un moment.',image_rejected:'Une photo a été refusée (format ou taille). Retirez-la et relancez.',invalid_json:'Réponse illisible. Relancez l’analyse.',sampling_disabled:'Claude n’est pas disponible pour ce compte.',bad_key:'Clé API refusée : vérifiez-la dans Accueil → Analyse IA.'}[e?.code];
+    if(e?.code==='not_granted'||e?.code==='sampling_disabled')aiReady=false;
+    if(msg!==null)S.ai[zid]=Object.assign({},S.ai[zid]||{},{error:msg||'L’analyse a échoué. Relancez-la.'});
+  }finally{delete busy[zid];save();render()}
+}
+let allRunning=false;
+async function analyzeAll(){if(allRunning)return;allRunning=true;try{for(const z of pendingZones()){toast('Analyse : '+z.title);await analyze(z.id);if(!aiReady)break}}finally{allRunning=false}S.active='rapport';save();render();window.scrollTo({top:0})}
+async function synth(){
+  const kept=allFindings().filter(x=>!S.off.includes(x.key));const st=document.getElementById('synthSt');st.textContent='Rédaction…';document.getElementById('btnSynth').disabled=true;
+  try{const{text}=await sampleFn(`Tu es ramoneur-fumiste. Rédige une synthèse de 5 à 8 lignes, en français clair pour un particulier, de ce diagnostic. Commence par l'avis général (utilisable / à corriger / arrêt conseillé), puis les travaux prioritaires. Pas de titre, pas de puces, pas de formule de politesse.
+
+${ctxText()}
+
+Non-conformités retenues :
+${kept.map(x=>`- [${GRAV[x.g]}] ${x.constat} (${x.ref}) → ${x.action}`).join('\n')}`,{cache:false,onText:({text})=>{const t=document.getElementById('synth');if(t)t.value=text}});
+    S.synth=text;save();st.textContent=''}
+  catch(e){st.textContent=e?.code==='cancelled'?'':'La rédaction a échoué. Réessayez.'}finally{const b=document.getElementById('btnSynth');if(b)b.disabled=false}
+}
+
+/* ================================================================== export */
+function reportText(){const kept=allFindings().filter(x=>!S.off.includes(x.key));
+  let t=`DIAGNOSTIC FUMISTERIE — ProRamonage 64\n${[S.f.client,S.f.adresse,S.f.date].filter(Boolean).join(' — ')}\n${ctxText()}\n\n`;
+  if(S.synth)t+=S.synth+'\n\n';
+  t+=`NON-CONFORMITÉS (${kept.length})\n`;for(const z of ZONES){const zl=kept.filter(x=>x.zone===z.id);if(!zl.length)continue;t+=`\n${z.title.toUpperCase()}\n`+zl.map(x=>`- [${GRAV[x.g]}] ${x.constat}\n  Réf. : ${x.ref}\n  Action : ${x.action}`).join('\n')+'\n'}
+  return t}
+function reportFile(){const f=eff();const kept=allFindings().filter(x=>!S.off.includes(x.key));const c=counts(kept);
+  const col={danger:'#b3261e',non_conforme:'#a45a08',a_verifier:'#2d5e88'};const v=verdictOf(c,kept.length)[1];
+  let b=`<h1>Diagnostic de l’installation de fumisterie</h1><p class="m">ProRamonage 64 · Boucau · 06 71 19 53 74</p><table class="info"><tr><th>Client</th><td>${esc(S.f.client)}</td></tr><tr><th>Adresse</th><td>${esc(S.f.adresse)}</td></tr><tr><th>Date</th><td>${esc(S.f.date)}</td></tr><tr><th>Appareil</th><td>${esc(LABELS.appareil[f.appareil]||'non précisé')} ${f.puissance?esc(f.puissance)+' kW':''}</td></tr><tr><th>Conduit</th><td>${esc(LABELS.conduit[f.conduit]||'non précisé')}${f.cf_designation?' — '+esc(f.cf_designation):''}</td></tr></table><p class="v">${v} · ${c.d} danger · ${c.n} non conforme · ${c.c} à vérifier</p>`;
+  if(S.synth)b+=`<h2>Synthèse</h2><p>${esc(S.synth).replace(/\n/g,'<br>')}</p>`;
+  b+=`<h2>Constats par zone</h2>`;
+  for(const z of ZONES){const zl=kept.filter(x=>x.zone===z.id);const ph=photos[z.id]||[];if(!zl.length&&!ph.length)continue;
+    b+=`<h3>${esc(z.title)}</h3>`+(zl.map(x=>`<div class="fd" style="border-left-color:${col[x.g]}"><b style="color:${col[x.g]}">${GRAV[x.g]}</b> — ${esc(x.constat)}<br><small>Réf. ${esc(x.ref)}</small><br>Action : ${esc(x.action)}</div>`).join('')||(z.id==='vrac'?'':'<p>Aucune non-conformité relevée.</p>'));
+    if(ph.length)b+=`<div class="ph">${ph.map(p=>`<figure><img src="${p.thumb}" alt=""><figcaption>${esc(p.label)}</figcaption></figure>`).join('')}</div>`}
+  b+=`<p class="m" style="margin-top:30px">Diagnostic visuel établi selon la NF DTU 24.1, la NF DTU 24.2, l’arrêté du 22/10/1969, le RSDT (art. 31), le décret 2023-641 et, le cas échéant, l’avis technique du fabricant du conduit. Les points « à vérifier » demandent un contrôle complémentaire.</p><p style="margin-top:40px">Signature du ramoneur :</p>`;
+  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diagnostic ${esc(S.f.client||'')}</title><style>body{font-family:system-ui,sans-serif;max-width:820px;margin:24px auto;padding:0 16px;color:#18201c;line-height:1.45}h1{font-size:24px;margin:0}h2{margin-top:28px;border-bottom:2px solid #0d6b3e;padding-bottom:4px}h3{margin:20px 0 8px}.m{color:#5b665f;font-size:13px}.info th{text-align:left;padding:3px 14px 3px 0;color:#5b665f;font-weight:500}.v{font-weight:600;padding:10px;background:#eef0ee;border-radius:8px}.fd{border-left:4px solid;padding:6px 10px;margin:6px 0;background:#f6f7f6}.ph{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}.ph img{width:100%;border-radius:6px}figure{margin:0}figcaption{font-size:12px;color:#5b665f}</style></head><body>${b}</body></html>`}
+async function exportReport(){const name=`diagnostic-${(S.f.client||'client').replace(/[^\w-]+/g,'-').toLowerCase()}-${S.f.date||'date'}.html`;
+  if(!downloads){const u=URL.createObjectURL(new Blob([reportFile()],{type:'text/html'}));const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Rapport téléchargé');return}
+  try{await downloads.save({filename:name,data:new Blob([reportFile()],{type:'text/html'})});toast('Rapport enregistré')}catch(e){if(e?.code!=='declined')toast('Le téléchargement n’a pas abouti.')}}
+function copyReport(){const t=reportText();const fb=()=>{const a=document.getElementById('copyArea');a.hidden=false;a.value=t;a.focus();a.select();toast('Texte sélectionné : copiez-le')};
+  try{navigator.clipboard.writeText(t).then(()=>toast('Texte copié'),fb)}catch(e){fb()}}
+
+/* ================================================================== événements */
+let tt;function toast(m){const el=document.getElementById('toast');el.textContent=m;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,2600)}
+const keepScroll=fn=>{const y=window.scrollY;fn();window.scrollTo(0,y)};
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.go){S.active=t.dataset.go;save();render();window.scrollTo({top:0});return}
+  if(t.dataset.mode){S.mode=t.dataset.mode;S.active=S.mode==='express'?'vrac':'install';save();render();window.scrollTo({top:0});return}
+  if(t.id==='btnHome'){S.mode=null;save();render();window.scrollTo({top:0});return}
+  if(t.id==='btnKey'){const v=document.getElementById('apiKey').value.trim();if(!v){toast('Collez la clé avant d’enregistrer.');return}try{localStorage.setItem(KEY_API,v)}catch(e){toast('Impossible d’enregistrer la clé sur cet appareil.');return}useApiKey();render();toast('Clé enregistrée');return}
+  if(t.id==='btnKeyDel'){try{localStorage.removeItem(KEY_API)}catch(e){}useApiKey();render();toast('Clé effacée');return}
+  if(t.id==='btnMode'){S.mode=S.mode==='express'?'complet':'express';S.active=S.mode==='express'?'vrac':(Object.keys(S.ai).length?'rapport':'install');save();render();window.scrollTo({top:0});return}
+  if(t.dataset.yn){const id=t.dataset.yn;S.f[id]=S.f[id]===t.dataset.v?'':t.dataset.v;save();keepScroll(render);return}
+  if(t.dataset.rm!=null){const a=photos[S.active];const p=a.splice(+t.dataset.rm,1)[0];if(p)URL.revokeObjectURL(p.url);keepScroll(render);return}
+  if(t.dataset.off){const k=t.dataset.off;S.off=S.off.includes(k)?S.off.filter(x=>x!==k):[...S.off,k];save();keepScroll(render);return}
+  if(t.dataset.ai){analyze(t.dataset.ai);return}
+  if(t.dataset.stop){busy[t.dataset.stop]?.ctl.abort();return}
+  if(t.dataset.all||t.id==='btnAll'){analyzeAll();return}
+  if(t.id==='btnSynth'){synth();return}
+  if(t.id==='btnExport'){exportReport();return}
+  if(t.id==='btnCopy'){copyReport();return}
+  if(t.id==='btnNew'){document.getElementById('confirmBar').hidden=false;return}
+  if(t.id==='cfNo'){document.getElementById('confirmBar').hidden=true;return}
+  if(t.id==='cfYes'){for(const k in photos){photos[k].forEach(p=>URL.revokeObjectURL(p.url));delete photos[k]}S=fresh();save();document.getElementById('confirmBar').hidden=true;render();toast('Nouveau diagnostic');return}
+  if(t.id==='btnExample'){S=fresh();S.mode='complet';S.f=Object.assign(S.f,{client:'Exemple (fictif)',adresse:'Anglet',appareil:'insert',conduit:'tubage',ventilation:'vmc_hygro',hotte_cuisine:'oui',grille_plafond:'18',poutre_isolee:'non',cf_dist:'4',cf_designation:'T450 N1 D V2 L50040 G50',air_section:'100',h_faitage:'0.25',antenne:'oui',ramonage12:'non'});S.active='rapport';save();render();toast('Exemple chargé (données fictives)');return}
+});
+document.addEventListener('input',e=>{const id=e.target.dataset?.field;if(!id||e.target.tagName==='SELECT')return;S.f[id]=e.target.value;save();refreshFindings()});
+document.addEventListener('change',e=>{
+  const el=e.target;
+  if(el.dataset?.field&&el.tagName==='SELECT'){S.f[el.dataset.field]=el.value;save();keepScroll(render);return}
+  if(el.type==='file'&&el.files?.length){addPhotos(S.active,[...el.files],el.dataset.shot);el.value='';return}
+  if(el.id==='synth'){S.synth=el.value;save()}
+});
+
+/* ================================================================== démarrage */
+useApiKey();render();
+(async()=>{
+  if(!window.claude?.use)return;
+  standalone=false;
+  try{downloads=await claude.use('downloads')}catch(e){}
+  try{sampleFn=await claude.use('sample');if(sampleFn){sampleLimits=await sampleFn.limits().catch(()=>null);aiReady=!!sampleLimits?.images}}catch(e){}
+  render();
+})();
+</script>
+
+</body>
+</html>
